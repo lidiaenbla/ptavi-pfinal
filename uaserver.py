@@ -32,7 +32,7 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                 self.wfile.write(b"SIP/2.0 400 Bad Request\r\n\r\n")
         elif linea[0] == "BYE":
             self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
-        elif linea[0] == "ACK":
+        # elif linea[0] == "ACK":
             # cancion = './mp32rtp -i 127.0.0.1 -p 23032 < ' + FILE
             # print("vamos a ejecutar", cancion)
             # os.system(cancion)
@@ -42,7 +42,7 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
 
 if __name__ == "__main__":
 
-    serv = socketserver.UDPServer((('', PORT)), SIPRegisterHandler)
+    serv = socketserver.UDPServer((('', 5060)), SIPRegisterHandler)
     print("Listening...")
     try:
         serv.serve_forever()
