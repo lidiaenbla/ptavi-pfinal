@@ -47,8 +47,6 @@ class leerFicheroXml(ContentHandler):
         return self.misdatos
 
 
-SIP = ""
-
 parser = make_parser()
 cHandler = leerFicheroXml()
 parser.setContentHandler(cHandler)
@@ -99,7 +97,7 @@ if METHOD == "INVITE":
     LINE += "\r\n"
     LINE += "v=0\r\no=\r\ns=misesion\r\nt=0\r\nm=" + pathAudio + " " + puertoRtp + " RTP"
 elif METHOD == "REGISTER":
-    LINE = "REGISTER sip:" + username + ":" + puertoProxy + " SIP/2.0 \r\nExpires: 3600"  
+    LINE2 = "REGISTER sip:" + username + ":" + puertoProxy + " SIP/2.0 \r\nExpires: 3600"  
 elif METHOD == "BYE":
     LINE = "BYE " 
 
@@ -112,5 +110,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
     if data[1] == "100" and data[4] == "180" and data[7] == "200":
         LINE = "ACK " + SIP
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
+
+with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket2:
+    my_socket2.connect(('127.0.0.1', int(puertoProxy)))
+    my_socket2.send(bytes(LINE2, 'utf-8') + b'\r\n')
 
 print("Socket terminado.")
