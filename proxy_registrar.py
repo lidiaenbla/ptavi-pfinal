@@ -2,6 +2,12 @@ import socket
 import sys
 from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
+import socketserver
+import time
+import json
+
+dicc_cliente = {}
+clientes = []
 
 class leerFicheroXml(ContentHandler):
     def __init__(self):
@@ -44,29 +50,70 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
     """
     Echo server class
     """
+    dicc_client = {}
+
+    def register2json(self):
+        """
+        Actualizar fichero json con los datos del dicc
+        """
+        fichJson = open('registered.json', 'w')
+        json.dump(dicc_cliente, fichJson)
+
+    def json2registered(self):
+        """
+        comprobar si existe el fichero .json
+        """
+        try:
+            open('registered.json', 'r')
+            print("existe el fichero")
+        except:
+            print("NO existe el fichero")
+            pass
+
+    def comprobarExpires(self):
+        """
+        Comprobar si ha expirado un cliente
+        """
+        deleteList = []
+        horaActual = time.gmtime(time.time())
+        for cliente in dicc_cliente:
+            if time.strptime(dicc_cliente[cliente][1], '%Y-%m-%d %H:%M:%S') <= horaActual:
+                deleteList.append(cliente)
+                print("cliente borrado", cliente)
+        for i in deleteList:
+            del dicc_cliente[i]
+
+    def Register(self, ip, sip, expires):
+        """
+        Registrar a clientes en el diccionario
+        """
+        self.comprobarExpires()
+        dicc_cliente[sip] = [ip, expires]
+        self.json2registered()
+        self.register2json()
+
     def handle(self):
         """
         Manejador
         """
         line = self.rfile.read()
-        print(line.decode('utf-8'))
+        IP = str(self.client_address[0])
+        Port = str(self.client_address[1])
         linea = line.decode('utf-8').split()
-        if linea[0] == "INVITE":
-            if linea[1].split("@"):
-                self.wfile.write(b"SIP/2.0 100 Trying\r\n\r\n SIP/2.0 180 Ring\r\n\r\n SIP/2.0 200 OK\r\n\r\n ")
-            else:
-                self.wfile.write(b"SIP/2.0 400 Bad Request\r\n\r\n")
-        elif linea[0] == "BYE":
-            self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
+        if linea[0] == "INVITE" or linea[0] == "BYE" or linea[0] == "ACK":
+            LINE = str(linea)
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
+                my_socket.connect(('127.0.0.1', 5060))
+                my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
         elif linea[0] == "REGISTER":
+            linea = line.decode('utf-8').split(':')
+            sip = linea[1]
+            expires = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(time.time() + float(linea[3])))
+            self.Register(IP, sip, expires)
             self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
-        elif linea[0] == "ACK":
-            # cancion = './mp32rtp -i 127.0.0.1 -p 23032 < ' + FILE
-            # print("vamos a ejecutar", cancion)
-            # os.system(cancion)
-            # print("hemos enviado la cancion")
         else:
             self.wfile.write(b"SIP/2.0 405 Method Not Allowed\r\n\r\n")
+
 
 parser = make_parser()
 cHandler = leerFicheroXml()
