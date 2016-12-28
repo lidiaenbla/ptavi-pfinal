@@ -26,7 +26,7 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
         print(line.decode('utf-8'))
         linea = line.decode('utf-8').split()
         if linea[0] == "INVITE":
-            if linea[1].split("@"):
+            if '@' in linea[1]:
                 self.wfile.write(b"SIP/2.0 100 Trying\r\n\r\n SIP/2.0 180 Ring\r\n\r\n SIP/2.0 200 OK\r\n\r\n ")
             else:
                 self.wfile.write(b"SIP/2.0 400 Bad Request\r\n\r\n")
