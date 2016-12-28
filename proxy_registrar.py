@@ -45,6 +45,7 @@ class leerFicheroXml(ContentHandler):
 
     def get_tags(self):
         return self.misdatos
+        
 
 class diccionarioRegistrar(socketserver.DatagramRequestHandler):
     """
@@ -97,6 +98,7 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         Manejador
         """
         line = self.rfile.read()
+        print(line)
         IP = str(self.client_address[0])
         Port = str(self.client_address[1])
         linea = line.decode('utf-8').split()
@@ -108,10 +110,12 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         elif linea[0] == "REGISTER":
             linea = line.decode('utf-8').split(':')
             sip = linea[1]
-            autorizacion = linea[3].split(' ')[-1]
-            print("AUTORIZACION", autorizacion)
-            if linea[1] == "Authorization":
-                expires = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(time.time() + float(autorizacion)))
+            print(linea)
+            autorizacion = linea[3].split('\r\n')[-1]
+            print(autorizacion)
+            if autorizacion == "Authorization":
+                print("holaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+                expires = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(time.time() + float(autorizacion[0])))
                 self.Register(IP, sip, expires)
                 self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
             else:
@@ -152,7 +156,7 @@ for elementos in misdatos:
 
 if __name__ == "__main__":
 
-    serv = socketserver.UDPServer((('', 5062)), diccionarioRegistrar)
+    serv = socketserver.UDPServer(('', 5062), diccionarioRegistrar)
     print("Listening...")
     try:
         serv.serve_forever()
