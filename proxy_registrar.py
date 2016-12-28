@@ -108,9 +108,14 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         elif linea[0] == "REGISTER":
             linea = line.decode('utf-8').split(':')
             sip = linea[1]
-            expires = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(time.time() + float(linea[3])))
-            self.Register(IP, sip, expires)
-            self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
+            autorizacion = linea[3].split(' ')[-1]
+            print("AUTORIZACION", autorizacion)
+            if linea[1] == "Authorization":
+                expires = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(time.time() + float(autorizacion)))
+                self.Register(IP, sip, expires)
+                self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
+            else:
+                self.wfile.write(b"SIP/2.0 401 Unauthorized\r\nWWW Authenticate: Digest nonce=89898989898989898989")
         else:
             self.wfile.write(b"SIP/2.0 405 Method Not Allowed\r\n\r\n")
 
