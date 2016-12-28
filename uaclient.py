@@ -97,7 +97,7 @@ if METHOD == "INVITE":
     LINE += "\r\n"
     LINE += "v=0\r\no=\r\ns=misesion\r\nt=0\r\nm=" + pathAudio + " " + puertoRtp + " RTP"
 elif METHOD == "REGISTER":
-    LINE = "REGISTER sip:" + username + ":" + puertoProxy + " SIP/2.0 \r\nExpires:" + OPCION  
+    LINE = "REGISTER sip:" + username + ":" + puertoProxy + " SIP/2.0\r\nExpires: " + OPCION  
 elif METHOD == "BYE":
     LINE = "BYE " 
 
@@ -110,5 +110,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
     if data[1] == "100" and data[4] == "180" and data[7] == "200":
         LINE = "ACK " + SIP
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
+    elif data[2] == "Unauthorized":
+        LINE = "REGISTER sip:" + username + ":" + puertoProxy + " SIP/2.0\r\nExpires: " + OPCION
+        LINE += "\r\nAuthorization: Digest response=123123123123123123"
 
 print("Socket terminado.")
