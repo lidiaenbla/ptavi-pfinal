@@ -107,7 +107,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
     data = my_socket.recv(1024)
     print(data.decode('utf-8'))
     data = data.decode('utf-8').split()
-    print(data)
     if data[1] == "100" and data[4] == "180" and data[7] == "200":
         LINE = "ACK " + SIP
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
@@ -115,7 +114,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
         LINE = "REGISTER sip:" + username + ":" + puertoProxy + " SIP/2.0\r\nExpires: " + OPCION
         LINE += "\r\nAuthorization: Digest response=123123123123123123"
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
-    elif data[1] == "200":
-        print("ok")
+        data = my_socket.recv(1024)
+        print("\r\n")
+        print(data.decode('utf-8'))
 
 print("Socket terminado.")
