@@ -66,7 +66,6 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         """
         try:
             open('registered.json', 'r')
-            print("existe el fichero")
         except:
             print("NO existe el fichero")
             pass
@@ -80,7 +79,6 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         for cliente in dicc_cliente:
             if time.strptime(dicc_cliente[cliente][1], '%Y-%m-%d %H:%M:%S') <= horaActual:
                 deleteList.append(cliente)
-                print("cliente borrado", cliente)
         for i in deleteList:
             del dicc_cliente[i]
 
@@ -97,10 +95,11 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         """
         Manejador
         """
+        autorizacion = 0
         line = self.rfile.read()
-        print(line)
         IP = str(self.client_address[0])
         Port = str(self.client_address[1])
+        print(line.decode('utf-8'))
         linea = line.decode('utf-8').split()
         if linea[0] == "INVITE" or linea[0] == "BYE" or linea[0] == "ACK":
             LINE = str(linea)
@@ -110,12 +109,14 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         elif linea[0] == "REGISTER":
             linea = line.decode('utf-8').split(':')
             sip = linea[1]
-            print(linea)
-            autorizacion = linea[3].split('\r\n')[-1]
-            print(autorizacion)
-            if autorizacion == "Authorization":
-                print("holaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-                expires = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(time.time() + float(autorizacion[0])))
+            line = linea[3].split("\r\n")
+            for i in line:
+                if i == "Authorization":
+                    autorizacion = 1
+            exp = linea[3].split('\r\n')
+            expires = exp[0].split(" ")
+            if autorizacion == 1:
+                expires = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(time.time() + float(expires[1])))
                 self.Register(IP, sip, expires)
                 self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
             else:
