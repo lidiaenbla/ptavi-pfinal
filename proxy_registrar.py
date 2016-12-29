@@ -57,8 +57,11 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         """
         Actualizar fichero json con los datos del dicc
         """
-        fichJson = open('registered.json', 'w')
+        # con a+ empezamos a escribir sin borrar lo anterior
+        fichJson = open('registered.json', 'a+')
+        fichJson.write('\n')
         json.dump(dicc_cliente, fichJson)
+        fichJson.close()
 
     def json2registered(self):
         """
@@ -69,6 +72,18 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         except:
             print("NO existe el fichero")
             pass
+
+    def comprobarExistencia(self,sip):
+        valor = 0
+        with open('registered.json','r') as reader:
+            for line in reader:
+                registro = line.capitalize()
+                valor = registro.find(str(sip))
+                if valor < 0:
+                    existe = 0
+                else:
+                    existe = 1
+        return existe
 
     def comprobarExpires(self):
         """
@@ -88,8 +103,13 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         """
         self.comprobarExpires()
         dicc_cliente[sip] = [ip, expires]
-        self.json2registered()
-        self.register2json()
+        print("SIP:",sip)
+        existencia = self.comprobarExistencia(sip)
+        if valor == 0:
+            self.json2registered()
+            self.register2json()
+        else:
+            print("cliente ya registrado")
 
     def handle(self):
         """
