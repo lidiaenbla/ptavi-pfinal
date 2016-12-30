@@ -117,10 +117,17 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         print(line.decode('utf-8'))
         linea = line.decode('utf-8').split()
         if linea[0] == "INVITE" or linea[0] == "BYE" or linea[0] == "ACK":
-            LINE = str(linea)
-            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
-                my_socket.connect(('127.0.0.1', 5060))
-                my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
+            linea = str(linea[1])
+            sip = linea.split(":")[-1]
+            print(sip)
+            existencia = self.comprobarExistencia(sip)
+            print("EXISTENCIA: ", existencia)
+            if existencia == 0:
+                self.wfile.write(b"SIP/2.0 404 User Not Found\r\n\r\n")
+            else:
+                with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
+                    my_socket.connect(('127.0.0.1', 5060))
+                    my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
         elif linea[0] == "REGISTER":
             linea = line.decode('utf-8').split(':')
             sip = linea[1]
