@@ -74,14 +74,10 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
             pass
 
     def comprobarExistencia(self,sip):
-        valor = 0
+        existe = 0
         with open('registered.json','r') as reader:
             for line in reader:
-                registro = line.capitalize()
-                valor = registro.find(str(sip))
-                if valor < 0:
-                    existe = 0
-                else:
+                if sip in line:
                     existe = 1
         return existe
 
@@ -103,13 +99,12 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         """
         self.comprobarExpires()
         dicc_cliente[sip] = [ip, expires]
-        print("SIP:",sip)
         existencia = self.comprobarExistencia(sip)
-        if valor == 0:
+        if existencia == 0:
             self.json2registered()
             self.register2json()
         else:
-            print("cliente ya registrado")
+            print("cliente ya registrado: " + sip  + "\n")
 
     def handle(self):
         """
