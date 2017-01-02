@@ -99,7 +99,7 @@ if METHOD == "INVITE":
 elif METHOD == "REGISTER":
     LINE = "REGISTER sip:" + username + ":" + puertoProxy + " SIP/2.0\r\nExpires: " + OPCION  
 elif METHOD == "BYE":
-    LINE = "BYE" 
+    LINE = "BYE sip:" + dirr + "SIP/2.0" 
 
 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
     my_socket.connect(('127.0.0.1', int(puertoProxy)))
@@ -108,7 +108,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
     print(data.decode('utf-8'))
     data = data.decode('utf-8').split()
     if data[1] == "100" and data[4] == "180" and data[7] == "200":
-        LINE = "ACK " + dirr
+        LINE = "ACK sip:" + dirr + "SIP/2.0"
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
     elif data[2] == "Unauthorized":
         LINE = "REGISTER sip:" + username + ":" + puertoProxy + " SIP/2.0\r\nExpires: " + OPCION
@@ -116,6 +116,5 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
         data = my_socket.recv(1024)
         print(data.decode('utf-8'))
-        data = my_socket.recv(1024)
 
 print("Socket terminado.")
