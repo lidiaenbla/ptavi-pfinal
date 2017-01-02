@@ -70,11 +70,11 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                 self.wfile.write(b"SIP/2.0 400 Bad Request\r\n\r\n")
         elif linea[0] == "BYE":
             self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
-        # elif linea[0] == "ACK":
-            # cancion = './mp32rtp -i 127.0.0.1 -p 23032 < ' + FILE
-            # print("vamos a ejecutar", cancion)
-            # os.system(cancion)
-            # print("hemos enviado la cancion")
+        elif linea[0] == "ACK":
+            cancion = './mp32rtp -i 127.0.0.1 -p 23032 < cancion.mp3'
+            print("vamos a ejecutar", cancion)
+            os.system(cancion)
+            print("hemos enviado la cancion")
         else:
             self.wfile.write(b"SIP/2.0 405 Method Not Allowed\r\n\r\n")
 
