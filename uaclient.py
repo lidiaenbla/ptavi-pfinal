@@ -108,7 +108,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
     print(data.decode('utf-8'))
     data = data.decode('utf-8').split()
     if data[1] == "100" and data[4] == "180" and data[7] == "200":
-        LINE = "ACK " + SIP
+        LINE = "ACK " + dirr
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
     elif data[2] == "Unauthorized":
         LINE = "REGISTER sip:" + username + ":" + puertoProxy + " SIP/2.0\r\nExpires: " + OPCION
@@ -117,5 +117,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
         data = my_socket.recv(1024)
         print("\r\n")
         print(data.decode('utf-8'))
+        data = my_socket.recv(1024)
 
 print("Socket terminado.")
