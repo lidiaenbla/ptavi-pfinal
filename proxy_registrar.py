@@ -116,19 +116,26 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         Port = str(self.client_address[1])
         print(line.decode('utf-8'))
         linea = line.decode('utf-8').split()
-        if linea[0] == "INVITE" or linea[0] == "BYE" or linea[0] == "ACK":
-            # linea = str(linea[1])
-            # sip = linea.split(":")[-1]
+        print(linea[0])
+        if ((linea[0] == "INVITE") or (linea[0] == "BYE") or (linea[0] == "ACK")):
+            linea = str(linea[1])
+            sip = linea.split(":")[-1]
             # print(sip)
-            # existencia = self.comprobarExistencia(sip)
+            existencia = self.comprobarExistencia(sip)
             # print("EXISTENCIA: ", existencia)
-            # if existencia == 0:
-                # self.wfile.write(b"SIP/2.0 404 User Not Found\r\n\r\n")
-            # else:
-            LINE = line.decode('utf-8')
-            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
-                my_socket.connect(('127.0.0.1', 5060))
-                my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
+            if existencia == 0:
+                self.wfile.write(b"SIP/2.0 404 User Not Found\r\n\r\n")
+            else:
+                LINE = line.decode('utf-8')
+                with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
+                    my_socket.connect(('127.0.0.1', 5060))
+                    my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
+                    data = my_socket.recv(1024)
+                    print("\r\n")
+                    print(data.decode('utf-8'))
+                    data = data.decode('utf-8').split()
+                    if data[1] == "100" and data[4] == "180" and data[7] == "200":
+                        self.wfile.write(b"SIP/2.0 100 Trying\r\n\r\n SIP/2.0 180 Ring\r\n\r\n SIP/2.0 200 OK\r\n\r\n ")
         elif linea[0] == "REGISTER":
             linea = line.decode('utf-8').split(':')
             sip = linea[1]
