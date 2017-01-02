@@ -9,39 +9,39 @@ import json
 dicc_cliente = {}
 clientes = []
 
+
+def crearFichero(nombre):
+    fich = open(nombre, 'a+' )
+    fich.close()
+
+def rellenarFichero(nombre, evento):
+    nameFich = nombre + ".log"
+    crearFichero(nameFich)
+    fichLog = open(nameFich, 'a+')
+    horaActual = time.strftime('%Y%m%d%H%M%S', time.gmtime(time.time()))
+    fichLog.write(str(horaActual) + " " + evento)
+
 class leerFicheroXml(ContentHandler):
     def __init__(self):
-        self.account = ""
-        self.uaserver = ""
-        self.rtpaudio = ""
-        self.regproxy = ""
+        self.server = ""
+        self.database = ""
         self.log = ""
-        self.audio = ""
         self.misdatos = []
 
     def startElement(self, etiqueta, attrs):
 
-        if etiqueta == 'account':
-            account = {'account': ({'username': attrs.get('username', ""),
-                                    'passwd': attrs.get('passwd', "")})}
-            self.misdatos.append(account)
-        elif etiqueta == 'uaserver':
-            uaserver = {'uaserver': ({'ip': attrs.get('ip', ""),
-                                      'puerto': attrs.get('puerto', "")})}
-            self.misdatos.append(uaserver)
-        elif etiqueta == 'rtpaudio':
-            rtpaudio = {'rtpaudio': ({'puerto': attrs.get('puerto', "")})}
-            self.misdatos.append(rtpaudio)
-        elif etiqueta == 'regproxy':
-            regproxy = {'regproxy': ({'ip': attrs.get('ip', ""),
-                                      'puerto': attrs.get('puerto', "")})}
-            self.misdatos.append(regproxy)
+        if etiqueta == 'server':
+            server = {'server': ({'name': attrs.get('name', ""),
+                                    'ip': attrs.get('ip', ""),
+                                    'puerto': attrs.get('puerto', "")})}
+            self.misdatos.append(server)
+        elif etiqueta == 'database':
+            database = {'database': ({'path': attrs.get('path', ""),
+                                      'passwdpath': attrs.get('passwdpath', "")})}
+            self.misdatos.append(database)
         elif etiqueta == 'log':
             log = {'log': ({'path': attrs.get('path', "")})}
             self.misdatos.append(log)
-        elif etiqueta == 'audio':
-            audio = {'audio': ({'path': attrs.get('path', "")})}
-            self.misdatos.append(audio)
 
     def get_tags(self):
         return self.misdatos
@@ -114,12 +114,16 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         line = self.rfile.read()
         IP = str(self.client_address[0])
         Port = str(self.client_address[1])
+        evento = "Recieved from " + IP+":"+Port+": " +line.decode('utf-8') 
+        rellenarFichero(name, evento)
         print(line.decode('utf-8'))
         linea = line.decode('utf-8').split()
         if ((linea[0] == "INVITE") or (linea[0] == "BYE") or (linea[0] == "ACK")):
-            if linea[0] == "ACK":
+            if linea[0] == "ACK" or linea[0] == "BYE":
                 LINE = line.decode('utf-8')
                 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
+                    evento = "Sent to " + IP+":"+Port+": 5060" +line.decode('utf-8') 
+                    rellenarFichero(name, evento)
                     my_socket.connect(('127.0.0.1', 5060))
                     my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
             else:
@@ -131,10 +135,14 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
                 else:
                     LINE = line.decode('utf-8')
                     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
+                        evento = "Sent to " + IP+":"+Port+": 5060" +line.decode('utf-8') 
+                        rellenarFichero(name, evento)
                         my_socket.connect(('127.0.0.1', 5060))
                         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
                         data = my_socket.recv(1024)
                         print(data.decode('utf-8'))
+                        evento = "Recieved from " + IP+":"+Port+": " +data.decode('utf-8') 
+                        rellenarFichero(name, evento)
                         data = data.decode('utf-8').split()
                         if data[1] == "100" and data[4] == "180" and data[7] == "200":
                             self.wfile.write(b"SIP/2.0 100 Trying\r\n\r\n SIP/2.0 180 Ring\r\n\r\n SIP/2.0 200 OK\r\n\r\n ")
@@ -189,10 +197,14 @@ for elementos in misdatos:
 
 if __name__ == "__main__":
 
+    evento = "Starting...\n"
+    rellenarFichero(name, evento)
     serv = socketserver.UDPServer(('', 5062), diccionarioRegistrar)
     print("Listening...")
     try:
         serv.serve_forever()
     except KeyboardInterrupt:
+        evento = "Finishing.\n"
+        rellenarFichero(name, evento)
         print("Finalizado proxy")
            
