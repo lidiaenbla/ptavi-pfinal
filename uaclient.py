@@ -115,7 +115,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
         LINE += "\r\nAuthorization: Digest response=123123123123123123"
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
         data = my_socket.recv(1024)
-        print("\r\n")
         print(data.decode('utf-8'))
         data = my_socket.recv(1024)
 
