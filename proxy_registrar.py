@@ -38,9 +38,7 @@ def hash(nonce, username):
                 # print("Contraseña: ", contraseña)
     contraseñaHash1 = hashlib.sha1()
     LINE1 = contraseña + nonce
-    # print(LINE1)
     contraseñaHash1.update(bytes(LINE1, 'utf-8'))
-    print(contraseñaHash1.digest())
     fichPasswords = open('passwords', 'r')
     for linea in fichPasswords:
         print("linea:",linea)
@@ -50,13 +48,11 @@ def hash(nonce, username):
             contraseñaFicheroHash = linea[1]
     contraseñaHash2 = hashlib.sha1()
     LINE2 = contraseñaFicheroHash + nonce
-    print(LINE2)
     contraseñaHash2.update(bytes(LINE2, 'utf-8'))
-    print(contraseñaHash2.digest())
-    if contraseñaHash1 == contraseñaHash2:
-        return REGIUSTRAIHDOUGiuhjWDFñiuzhrdgñoiuper
-
-
+    if contraseñaHash1.digest() == contraseñaHash2.digest():
+        return "coinciden"
+    else:
+        return "noCoinciden"
 
 
 class leerFicheroXml(ContentHandler):
@@ -197,23 +193,29 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         elif linea[0] == "REGISTER":
             linea = line.decode('utf-8').split(':')
             sip = linea[1]
-            hash(nonce, sip)
-            line = linea[3].split("\r\n")
-            for i in line:
-                if i == "Authorization":
-                    autorizacion = 1
-            exp = linea[3].split('\r\n')
-            expires = exp[0].split(" ")
-            if autorizacion == 1:
-                expires = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(time.time() + float(expires[1])))
-                self.Register(IP, sip, expires)
-                evento = "Sent to " + IP+":"+Port + " SIP/2.0 200 OK\r\n\r\n"
-                rellenarFichero(name, evento)
-                self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
+            resumenHash = hash(nonce, sip)
+            print("resumenHash:", resumenHash)
+            if resumenHash == "coinciden":
+                print("Registrando...")
+                line = linea[3].split("\r\n")
+                for i in line:
+                    if i == "Authorization":
+                        autorizacion = 1
+                exp = linea[3].split('\r\n')
+                expires = exp[0].split(" ")
+                if autorizacion == 1:
+                    expires = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(time.time() + float(expires[1])))
+                    self.Register(IP, sip, expires)
+                    evento = "Sent to " + IP+":"+Port + " SIP/2.0 200 OK\r\n\r\n"
+                    rellenarFichero(name, evento)
+                    self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
+                else:
+                    evento = "Sent to " + IP+":"+Port + " SIP/2.0 401 Unauthorized\r\nWWW Authenticate: Digest nonce=" + nonce
+                    rellenarFichero(name, evento)
+                    self.wfile.write(b"SIP/2.0 401 Unauthorized\r\nWWW Authenticate: Digest nonce=89898989898989898989\r\n\r\n")
             else:
-                evento = "Sent to " + IP+":"+Port + " SIP/2.0 401 Unauthorized\r\nWWW Authenticate: Digest nonce=" + nonce
-                rellenarFichero(name, evento)
-                self.wfile.write(b"SIP/2.0 401 Unauthorized\r\nWWW Authenticate: Digest nonce=89898989898989898989")
+                print("Contraseña errónea...")
+                self.wfile.write(b"SIP/2.0 401 Unauthorized\r\nWWW Authenticate: Digest nonce=89898989898989898989\r\n\r\n")
         else:
             evento = "Sent to " + IP+":"+Port + " SIP/2.0 405 Method Not Allowed\r\n\r\n"
             rellenarFichero(name, evento)
