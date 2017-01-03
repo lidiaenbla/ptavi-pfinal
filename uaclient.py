@@ -112,42 +112,42 @@ rellenarFichero(username, evento)
 
 
 if METHOD == "INVITE":
-    LINE = "INVITE sip:" + dirr + " SIP/2.0 \r\nContent-Type: application/sdp"
+    LINE = "INVITE sip:" + dirr + ":" + puerto + " SIP/2.0 \r\nContent-Type: application/sdp"
     LINE += "\r\n"
     LINE += "v=0\r\no=\r\ns=misesion\r\nt=0\r\nm=" + pathAudio + " " + puertoRtp + " RTP"
-    evento = "Sent to " + ipProxy+":"+puertoProxy+": " +LINE 
+    evento = "Sent to " + ipProxy+":"+puerto+": " +LINE 
     rellenarFichero(username, evento)
 elif METHOD == "REGISTER":
-    LINE = "REGISTER sip:" + username + ":" + puertoProxy + " SIP/2.0\r\nExpires: " + OPCION 
-    evento = "Sent to " + ipProxy+":"+puertoProxy+": " +LINE 
+    LINE = "REGISTER sip:" + username + ":" + puerto + " SIP/2.0\r\nExpires: " + OPCION 
+    evento = "Sent to " + ipProxy+":"+puerto+": " +LINE 
     rellenarFichero(username, evento) 
 elif METHOD == "BYE":
-    LINE = "BYE sip:" + dirr + "SIP/2.0"
-    evento = "Sent to " + ipProxy+":"+puertoProxy+": " +LINE 
+    LINE = "BYE sip:" + dirr + ":" + puerto + " SIP/2.0"
+    evento = "Sent to " + ipProxy+":"+puerto+": " +LINE 
     rellenarFichero(username, evento) 
 
 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
     my_socket.connect(('127.0.0.1', int(puertoProxy)))
     my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
     data = my_socket.recv(1024)
-    print(data.decode('utf-8'))
+    print("Recibimos: ",data.decode('utf-8'))
     evento = "Received from " + ipProxy+":"+puertoProxy+": " + data.decode('utf-8')
     rellenarFichero(username, evento)
     data = data.decode('utf-8').split()
     if data[1] == "100" and data[4] == "180" and data[7] == "200":
-        LINE = "ACK sip:" + dirr + "SIP/2.0"
+        LINE = "ACK sip:" + dirr +":" + puerto + " SIP/2.0"
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
         evento = "Sent to " + ipProxy+":"+puertoProxy+": " +LINE 
         rellenarFichero(username, evento)
     elif data[2] == "Unauthorized":
-        LINE = "REGISTER sip:" + username + ":" + puertoProxy + " SIP/2.0\r\nExpires: " + OPCION
+        LINE = "REGISTER sip:" + username + ":" + puerto + " SIP/2.0\r\nExpires: " + OPCION
         LINE += "\r\nAuthorization: Digest response=123123123123123123"
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
         evento = "Sent to " + ipProxy+":"+puertoProxy+": " +LINE 
         rellenarFichero(username, evento)
         data = my_socket.recv(1024)
-        print(data.decode('utf-8'))
-        evento = "Received from " + ipProxy+":"+puertoProxy+": " + data.decode('utf-8')
+        print("Recibimos: ",data.decode('utf-8'))
+        evento = "Received from " + ipProxy+":"+puerto+": " + data.decode('utf-8')
         rellenarFichero(username, evento)
 
 print("Socket terminado.")
