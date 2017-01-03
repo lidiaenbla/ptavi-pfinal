@@ -74,7 +74,7 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         try:
             open('registered.json', 'r')
         except:
-            print("NO existe el fichero")
+            print("Creando fichero")
             fich = open('registered.json', 'w')
             fich.close()
             pass
@@ -123,36 +123,40 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         Port = str(self.client_address[1])
         evento = "Recieved from " + IP+":"+Port+": " +line.decode('utf-8') 
         rellenarFichero(name, evento)
-        print(line.decode('utf-8'))
+        print("Recibimos: ",line.decode('utf-8'))
         linea = line.decode('utf-8').split()
         if ((linea[0] == "INVITE") or (linea[0] == "BYE") or (linea[0] == "ACK")):
+            frase = line.decode('utf-8').split(':')
+            # Sacamos puerto servidor
+            puertoServidor = frase[2].split(" ")[0]
             if linea[0] == "ACK" or linea[0] == "BYE":
                 LINE = line.decode('utf-8')
+                self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
                 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
-                    evento = "Sent to " + IP+": 5060" +line.decode('utf-8') 
+                    evento = "Sent to " + IP+": " + puertoServidor + line.decode('utf-8')
                     rellenarFichero(name, evento)
-                    my_socket.connect(('127.0.0.1', 5060))
+                    my_socket.connect(('127.0.0.1', int(puertoServidor)))
                     my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
             else:
                 linea = str(linea[1])
-                sip = linea.split(":")[-1]
+                sip = linea.split(":")[-2]
                 existencia = self.comprobarExistencia(sip)
                 if existencia == 0:
                     self.wfile.write(b"SIP/2.0 404 User Not Found\r\n\r\n")
                 else:
                     LINE = line.decode('utf-8')
                     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
-                        evento = "Sent to " + IP+": 5060" +line.decode('utf-8') 
+                        evento = "Sent to " + IP+": " + puertoServidor + line.decode('utf-8')
                         rellenarFichero(name, evento)
-                        my_socket.connect(('127.0.0.1', 5060))
+                        my_socket.connect(('127.0.0.1', int(puertoServidor)))
                         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
                         data = my_socket.recv(1024)
-                        print(data.decode('utf-8'))
+                        print("Recibimos: ",data.decode('utf-8'))
                         evento = "Recieved from " + IP+":"+Port+": " +line.decode('utf-8') 
                         rellenarFichero(name, evento)
                         data = data.decode('utf-8').split()
                         if data[1] == "100" and data[4] == "180" and data[7] == "200":
-                            evento = "Sent to " + IP+": 5060 SIP/2.0 100 Trying\r\n\r\n SIP/2.0 180 Ring\r\n\r\n SIP/2.0 200 OK\r\n\r\n"
+                            evento = "Sent to " + IP+": puerto SIP/2.0 100 Trying\r\n\r\n SIP/2.0 180 Ring\r\n\r\n SIP/2.0 200 OK\r\n\r\n"
                             rellenarFichero(name, evento)
                             self.wfile.write(b"SIP/2.0 100 Trying\r\n\r\n SIP/2.0 180 Ring\r\n\r\n SIP/2.0 200 OK\r\n\r\n ")
         elif linea[0] == "REGISTER":
