@@ -5,6 +5,7 @@ from xml.sax.handler import ContentHandler
 import socketserver
 import time
 import json
+import hashlib
 
 dicc_cliente = {}
 clientes = []
@@ -24,6 +25,39 @@ def rellenarFichero(nombre, evento):
     for i in event:
         EVNT = EVNT + str(i)
     fichLog.write(str(horaActual) + " " + EVNT + "\r\n")
+
+def hash(nonce, username):
+    ficheros = ['ua1.xml', 'ua2.xml']
+    for i in ficheros:
+        fich = open(i,'r')
+        for line in fich:
+            if username in line:
+                line = line.split("=")
+                line = line[2].split('"')
+                contraseña = line[1]
+                # print("Contraseña: ", contraseña)
+    contraseñaHash1 = hashlib.sha1()
+    LINE1 = contraseña + nonce
+    # print(LINE1)
+    contraseñaHash1.update(bytes(LINE1, 'utf-8'))
+    print(contraseñaHash1.digest())
+    fichPasswords = open('passwords', 'r')
+    for linea in fichPasswords:
+        print("linea:",linea)
+        print("username:",username)
+        if username in linea:
+            linea = linea.split("=")
+            contraseñaFicheroHash = linea[1]
+    contraseñaHash2 = hashlib.sha1()
+    LINE2 = contraseñaFicheroHash + nonce
+    print(LINE2)
+    contraseñaHash2.update(bytes(LINE2, 'utf-8'))
+    print(contraseñaHash2.digest())
+    if contraseñaHash1 == contraseñaHash2:
+        return REGIUSTRAIHDOUGiuhjWDFñiuzhrdgñoiuper
+
+
+
 
 class leerFicheroXml(ContentHandler):
     def __init__(self):
@@ -118,6 +152,7 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         Manejador
         """
         autorizacion = 0
+        nonce = '"89898989898989898989"'
         line = self.rfile.read()
         IP = str(self.client_address[0])
         Port = str(self.client_address[1])
@@ -162,6 +197,7 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         elif linea[0] == "REGISTER":
             linea = line.decode('utf-8').split(':')
             sip = linea[1]
+            hash(nonce, sip)
             line = linea[3].split("\r\n")
             for i in line:
                 if i == "Authorization":
@@ -175,7 +211,7 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
                 rellenarFichero(name, evento)
                 self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
             else:
-                evento = "Sent to " + IP+":"+Port + " SIP/2.0 401 Unauthorized\r\nWWW Authenticate: Digest nonce=89898989898989898989"
+                evento = "Sent to " + IP+":"+Port + " SIP/2.0 401 Unauthorized\r\nWWW Authenticate: Digest nonce=" + nonce
                 rellenarFichero(name, evento)
                 self.wfile.write(b"SIP/2.0 401 Unauthorized\r\nWWW Authenticate: Digest nonce=89898989898989898989")
         else:
