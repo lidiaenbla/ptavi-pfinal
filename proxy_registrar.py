@@ -19,7 +19,11 @@ def rellenarFichero(nombre, evento):
     crearFichero(nameFich)
     fichLog = open(nameFich, 'a+')
     horaActual = time.strftime('%Y%m%d%H%M%S', time.gmtime(time.time()))
-    fichLog.write(str(horaActual) + " " + evento)
+    event = evento.split("\r\n")
+    EVNT = ""
+    for i in event:
+        EVNT = EVNT + str(i)
+    fichLog.write(str(horaActual) + " " + EVNT + "\r\n")
 
 class leerFicheroXml(ContentHandler):
     def __init__(self):
@@ -71,6 +75,8 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
             open('registered.json', 'r')
         except:
             print("NO existe el fichero")
+            fich = open('registered.json', 'w')
+            fich.close()
             pass
 
     def comprobarExistencia(self,sip):
@@ -97,6 +103,7 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         """
         Registrar a clientes en el diccionario
         """
+        self.json2registered()
         self.comprobarExpires()
         dicc_cliente[sip] = [ip, expires]
         existencia = self.comprobarExistencia(sip)
@@ -122,7 +129,7 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
             if linea[0] == "ACK" or linea[0] == "BYE":
                 LINE = line.decode('utf-8')
                 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
-                    evento = "Sent to " + IP+":"+Port+": 5060" +line.decode('utf-8') 
+                    evento = "Sent to " + IP+": 5060" +line.decode('utf-8') 
                     rellenarFichero(name, evento)
                     my_socket.connect(('127.0.0.1', 5060))
                     my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
@@ -135,16 +142,18 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
                 else:
                     LINE = line.decode('utf-8')
                     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
-                        evento = "Sent to " + IP+":"+Port+": 5060" +line.decode('utf-8') 
+                        evento = "Sent to " + IP+": 5060" +line.decode('utf-8') 
                         rellenarFichero(name, evento)
                         my_socket.connect(('127.0.0.1', 5060))
                         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
                         data = my_socket.recv(1024)
                         print(data.decode('utf-8'))
-                        evento = "Recieved from " + IP+":"+Port+": " +data.decode('utf-8') 
+                        evento = "Recieved from " + IP+":"+Port+": " +line.decode('utf-8') 
                         rellenarFichero(name, evento)
                         data = data.decode('utf-8').split()
                         if data[1] == "100" and data[4] == "180" and data[7] == "200":
+                            evento = "Sent to " + IP+": 5060 SIP/2.0 100 Trying\r\n\r\n SIP/2.0 180 Ring\r\n\r\n SIP/2.0 200 OK\r\n\r\n"
+                            rellenarFichero(name, evento)
                             self.wfile.write(b"SIP/2.0 100 Trying\r\n\r\n SIP/2.0 180 Ring\r\n\r\n SIP/2.0 200 OK\r\n\r\n ")
         elif linea[0] == "REGISTER":
             linea = line.decode('utf-8').split(':')
@@ -158,10 +167,16 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
             if autorizacion == 1:
                 expires = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(time.time() + float(expires[1])))
                 self.Register(IP, sip, expires)
+                evento = "Sent to " + IP+":"+Port + " SIP/2.0 200 OK\r\n\r\n"
+                rellenarFichero(name, evento)
                 self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
             else:
+                evento = "Sent to " + IP+":"+Port + " SIP/2.0 401 Unauthorized\r\nWWW Authenticate: Digest nonce=89898989898989898989"
+                rellenarFichero(name, evento)
                 self.wfile.write(b"SIP/2.0 401 Unauthorized\r\nWWW Authenticate: Digest nonce=89898989898989898989")
         else:
+            evento = "Sent to " + IP+":"+Port + " SIP/2.0 405 Method Not Allowed\r\n\r\n"
+            rellenarFichero(name, evento)
             self.wfile.write(b"SIP/2.0 405 Method Not Allowed\r\n\r\n")
 
 
@@ -197,14 +212,14 @@ for elementos in misdatos:
 
 if __name__ == "__main__":
 
-    evento = "Starting...\n"
+    evento = "Starting..."
     rellenarFichero(name, evento)
     serv = socketserver.UDPServer(('', 5062), diccionarioRegistrar)
     print("Listening...")
     try:
         serv.serve_forever()
     except KeyboardInterrupt:
-        evento = "Finishing.\n"
+        evento = "Finishing."
         rellenarFichero(name, evento)
         print("Finalizado proxy")
            
