@@ -134,14 +134,16 @@ elif METHOD == "BYE":
 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
     my_socket.connect(('127.0.0.1', int(puertoProxy)))
     my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
+    print("Enviamos: ", LINE + "\n")
     data = my_socket.recv(1024)
-    print("Recibimos: ", data.decode('utf-8'))
+    print("Recibimos: ", data.decode('utf-8') + "\n")
     evento = "Received from " + ipProxy + ":"
     evento += puertoProxy + ": " + data.decode('utf-8')
     rellenarFichero(username, evento)
     data = data.decode('utf-8').split()
     if data[1] == "100" and data[4] == "180" and data[7] == "200":
         LINE = "ACK sip:" + dirr + ":" + puerto + " SIP/2.0"
+        print("Enviamos: ", LINE + "\n")
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
         evento = "Sent to " + ipProxy + ":" + puertoProxy + ": " + LINE
         rellenarFichero(username, evento)
@@ -149,11 +151,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
         LINE = "REGISTER sip:" + username + ":" + puerto + " SIP/2.0\r\n"
         LINE += "Expires: " + OPCION
         LINE += "\r\nAuthorization: Digest response=123123123123123123"
+        print("Enviamos: ", LINE + "\n")
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
         evento = "Sent to " + ipProxy + ":" + puertoProxy + ": " + LINE
         rellenarFichero(username, evento)
         data = my_socket.recv(1024)
-        print("Recibimos: ", data.decode('utf-8'))
+        print("Recibimos: ", data.decode('utf-8') + "\n")
         evento = "Received from " + ipProxy + ":" + puerto + ": "
         evento += data.decode('utf-8')
         rellenarFichero(username, evento)
