@@ -96,7 +96,6 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         # con a+ empezamos a escribir sin borrar lo anterior
         fichJson = open('registered.json', 'a+')
         fichJson.write('\n')
-        print("diccionario clientes: ",dicc_cliente)
         json.dump(dicc_cliente, fichJson)
         fichJson.close()
 
@@ -139,30 +138,21 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
                             hora = hora[1].split(" ")
                             hora = hora[2].split('"')
                             List.append(hora[0])
-        print("Lista horas del register: ", List)
         for i in List:
-            print("Hora actual: ",horaActual[1])
             if i <= horaActual[1]:
-                print("print de Lista de horas: ",i)
                 deleteList.append(i)
-        print("Lista de gente a la que borrar: ",deleteList)
         with open('registered.json','r') as reader:
             List = []
             for line in reader:
                 List.append(line)
-        print("Lista: ",List)
         j=0
-        print(deleteList)
         for j in deleteList:
             for elemento in List:
                 if j in elemento:
                     print("Eliminamos -->", elemento)
                     List.remove(elemento)
-        print("Lista después de borrar: ", List)
-
         if List != 0:
             fJson = open('registered.json','w')
-            print("diccionario clientes: ",List)
             json.dump(List, fJson)
             fJson.close()
 
@@ -234,7 +224,6 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         elif linea[0] == "REGISTER":
             if linea[4] != "0":
                 dicc_cliente = {}
-                print("dicc cliente en el handle: ", dicc_cliente)
                 linea = line.decode('utf-8').split(':')
                 sip = linea[1]
                 resumenHash = hash(nonce, sip)
@@ -246,7 +235,6 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
                             autorizacion = 1
                     if autorizacion == 1:
                         expires = linea[3].split("\r\n")
-                        print("expireeeeeeeeeeeeees:",expires)
                         expires = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(time.time() + int(expires[0])))
                         self.Register(ipPuerto, sip, expires, dicc_cliente)
                         evento = "Sent to " + IP+":"+Port + " SIP/2.0 200 OK\r\n\r\n"
