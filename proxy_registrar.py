@@ -120,7 +120,7 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
                     existe = 1
         return existe
 
-    def comprobarExpires(self):
+    def comprobarExpires(self,dicc_cliente):
         """
         Comprobar si ha expirado un cliente
         """
@@ -131,12 +131,14 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         horaActual = horaActual.split(" ")
         with open('registered.json','r') as reader:
             for line in reader:
-                if line != "\n":
-                    hora = line.split(",")
-                    print("hora: ",hora)
-                    hora = hora[1].split(" ")
-                    hora = hora[2].split('"')
-                    List.append(hora[0])
+                if (line != "\n"):
+                    if (line != "{}\n"):
+                        if (line != "[]\n"):
+                            hora = line.split(",")
+                            print("hora: ",hora)
+                            hora = hora[1].split(" ")
+                            hora = hora[2].split('"')
+                            List.append(hora[0])
         print("Lista horas del register: ", List)
         for i in List:
             print("Hora actual: ",horaActual[1])
@@ -158,6 +160,12 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
                     List.remove(elemento)
         print("Lista después de borrar: ", List)
 
+        if List != 0:
+            fJson = open('registered.json','w')
+            print("diccionario clientes: ",List)
+            json.dump(List, fJson)
+            fJson.close()
+
     
 
     def Register(self, ip, sip, expires, dicc_cliente):
@@ -165,7 +173,8 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         Registrar a clientes en el diccionario
         """
         self.json2registered()
-        self.comprobarExpires()
+        if dicc_cliente != 0:
+            self.comprobarExpires(dicc_cliente)
         dicc_cliente[sip] = [ip, expires]
         existencia = self.comprobarExistencia(sip)
         if existencia == 0:
