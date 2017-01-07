@@ -89,7 +89,6 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
     """
     Echo server class
     """
-    dicc_client = {}
 
     def register2json(self):
         """
@@ -98,6 +97,7 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         # con a+ empezamos a escribir sin borrar lo anterior
         fichJson = open('registered.json', 'a+')
         fichJson.write('\n')
+        print("diccionario clientes: ",dicc_cliente)
         json.dump(dicc_cliente, fichJson)
         fichJson.close()
 
@@ -129,29 +129,36 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         deleteList = []
         horaActual = time.gmtime(time.time())
         horaActual = time.strftime('%Y-%m-%d %H:%M:%S', horaActual)
-        print("HORAAA ACTUAL: ", horaActual)
+        horaActual = horaActual.split(" ")
         with open('registered.json','r') as reader:
             for line in reader:
                 if line != "\n":
                     hora = line.split(",")
+                    print("hora: ",hora)
                     hora = hora[1].split(" ")
                     hora = hora[2].split('"')
                     List.append(hora[0])
-        print(List)
+        print("Lista horas del register: ", List)
         for i in List:
-            print(horaActual)
-            if i <= horaActual:
-                print(i)
+            print("Hora actual: ",horaActual[1])
+            if i <= horaActual[1]:
+                print("print de Lista de horas: ",i)
                 deleteList.append(i)
+        print("Lista de gente a la que borrar: ",deleteList)
+        with open('registered.json','r') as reader:
+            List = []
+            for line in reader:
+                List.append(line)
+        print("Lista: ",List)
+        j=0
         print(deleteList)
+        for j in deleteList:
+            for elemento in List:
+                if j in elemento:
+                    print("Eliminamos -->", elemento)
+                    List.remove(elemento)
+        print("Lista después de borrar: ", List)
 
-        # for j in deleteList:
-            # with open('registered.json','r') as reader:
-                # for line in reader:
-                    # if j in line:
-                        # line = "borrado"
-                        # reader.write(line)
-                        # print("client borrao")
     
 
     def Register(self, ip, sip, expires):
@@ -172,6 +179,7 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         """
         Manejador
         """
+        dicc_cliente = {}
         autorizacion = 0
         nonce = '"89898989898989898989"'
         line = self.rfile.read()
