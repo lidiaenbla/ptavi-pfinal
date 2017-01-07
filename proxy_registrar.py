@@ -7,8 +7,7 @@ import time
 import json
 import hashlib
 
-dicc_cliente = {}
-clientes = []
+# dicc_cliente = {}
 
 
 def crearFichero(nombre):
@@ -90,7 +89,7 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
     Echo server class
     """
 
-    def register2json(self):
+    def register2json(self, dicc_cliente):
         """
         Actualizar fichero json con los datos del dicc
         """
@@ -161,7 +160,7 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
 
     
 
-    def Register(self, ip, sip, expires):
+    def Register(self, ip, sip, expires, dicc_cliente):
         """
         Registrar a clientes en el diccionario
         """
@@ -171,7 +170,7 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         existencia = self.comprobarExistencia(sip)
         if existencia == 0:
             self.json2registered()
-            self.register2json()
+            self.register2json(dicc_cliente)
         else:
             print("cliente ya registrado: " + sip  + "\n")
 
@@ -179,12 +178,12 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         """
         Manejador
         """
-        dicc_cliente = {}
         autorizacion = 0
         nonce = '"89898989898989898989"'
         line = self.rfile.read()
         IP = str(self.client_address[0])
         Port = str(self.client_address[1])
+        ipPuerto = IP + ":" + Port
         evento = "Recieved from " + IP+":"+Port+": " +line.decode('utf-8') 
         rellenarFichero(name, evento)
         print("Recibimos: ",line.decode('utf-8') + "\n")
@@ -225,6 +224,8 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
                             self.wfile.write(b"SIP/2.0 100 Trying\r\n\r\n SIP/2.0 180 Ring\r\n\r\n SIP/2.0 200 OK\r\n\r\n ")
         elif linea[0] == "REGISTER":
             if linea[4] != "0":
+                dicc_cliente = {}
+                print("dicc cliente en el handle: ", dicc_cliente)
                 linea = line.decode('utf-8').split(':')
                 sip = linea[1]
                 resumenHash = hash(nonce, sip)
@@ -238,7 +239,7 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
                         expires = linea[3].split("\r\n")
                         print("expireeeeeeeeeeeeees:",expires)
                         expires = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(time.time() + int(expires[0])))
-                        self.Register(IP, sip, expires)
+                        self.Register(ipPuerto, sip, expires, dicc_cliente)
                         evento = "Sent to " + IP+":"+Port + " SIP/2.0 200 OK\r\n\r\n"
                         rellenarFichero(name, evento)
                         self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
