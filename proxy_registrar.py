@@ -25,18 +25,8 @@ def rellenarFichero(nombre, evento):
         EVNT = EVNT + str(i)
     fichLog.write(str(horaActual) + " " + EVNT + "\r\n")
 
-def hash(nonce, username):
-    ficheros = ['ua1.xml', 'ua2.xml']
-    for i in ficheros:
-        fich = open(i,'r')
-        for line in fich:
-            if username in line:
-                line = line.split("=")
-                line = line[2].split('"')
-                contraseña = line[1]
-    contraseñaHash1 = hashlib.sha1()
-    LINE1 = contraseña + nonce
-    contraseñaHash1.update(bytes(LINE1, 'utf-8'))
+def hash(nonce, username, resumenCliente):
+    nonce = nonce.split('"')
     fichPasswords = open('passwords', 'r')
     for linea in fichPasswords:
         if username in linea:
@@ -44,15 +34,12 @@ def hash(nonce, username):
             contraseñaFicheroHash = linea[1]
     contraseñaHash2 = hashlib.sha1()
     contraseñaFicheroHash = contraseñaFicheroHash.split("\n")
-    LINE2 = contraseñaFicheroHash[0] + nonce
+    LINE2 = contraseñaFicheroHash[0] + nonce[1]
     contraseñaHash2.update(bytes(LINE2, 'utf-8'))
-    # print("LINE: ", LINE1)
-    # print("LINE fich: ", LINE2)
-    # print("Contraseña: ", contraseña )
-    # print("ContraseñaFich: ", contraseñaFicheroHash)
-    # print("resumen Contraseña: ", contraseñaHash1.digest())
-    # print("resumen contra fich: ", contraseñaHash2.digest())
-    if contraseñaHash1.digest() == contraseñaHash2.digest():
+    contraseñaHash2 = str(contraseñaHash2.digest()).split("'")
+    print("Resumen fichero passwords: ",contraseñaHash2[1])
+    print("Resumen cliente: ", resumenCliente)
+    if resumenCliente == contraseñaHash2[1]:
         return "coinciden"
     else:
         return "noCoinciden"
@@ -134,7 +121,6 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
                     if (line != "{}\n"):
                         if (line != "[]\n"):
                             hora = line.split(",")
-                            print("hora: ",hora)
                             hora = hora[1].split(" ")
                             hora = hora[2].split('"')
                             List.append(hora[0])
@@ -185,7 +171,7 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         ipPuerto = IP + ":" + Port
         evento = "Recieved from " + IP+":"+Port+": " +line.decode('utf-8') 
         rellenarFichero(name, evento)
-        print("Recibimos: ",line.decode('utf-8') + "\n")
+        print("Recibimos: ",line.decode('utf-8'))
         linea = line.decode('utf-8').split()
         if ((linea[0] == "INVITE") or (linea[0] == "BYE") or (linea[0] == "ACK")):
             frase = line.decode('utf-8').split(':')
@@ -224,9 +210,15 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         elif linea[0] == "REGISTER":
             if linea[4] != "0":
                 dicc_cliente = {}
+                resumenHash = ""
                 linea = line.decode('utf-8').split(':')
-                sip = linea[1]
-                resumenHash = hash(nonce, sip)
+                try:
+                    resumenCliente = linea[4]
+                    resumenCliente = resumenCliente.split('"')
+                    sip = linea[1]
+                    resumenHash = hash(nonce, sip, resumenCliente[1])
+                except:
+                    pass
                 if resumenHash == "coinciden":
                     print("Registrando...\n")
                     line = linea[3].split("\r\n")
