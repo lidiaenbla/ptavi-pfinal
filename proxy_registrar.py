@@ -82,7 +82,6 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         """
         # con a+ empezamos a escribir sin borrar lo anterior
         fichJson = open('registered.json', 'a+')
-        fichJson.write('\n')
         json.dump(dicc_cliente, fichJson)
         fichJson.close()
 
@@ -120,11 +119,10 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
             for line in reader:
                 if (line != "\n"):
                     if (line != "{}\n"):
-                        if (line != "[]\n"):
-                            hora = line.split(",")
-                            hora = hora[1].split(" ")
-                            hora = hora[2].split('"')
-                            List.append(hora[0])
+                        hora = line.split(",")
+                        hora = hora[1].split(" ")
+                        hora = hora[2].split('"')
+                        List.append(hora[0])
         reader.close()
         for i in List:
             if i <= horaActual[1]:
@@ -175,7 +173,7 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         IP = str(self.client_address[0])
         Port = str(self.client_address[1])
         ipPuerto = IP + ":" + Port
-        evento = "Recieved from " + IP+":"+Port+": " +line.decode('utf-8') 
+        evento = "Recieved from " + IP + ":" + Port + ": " + line.decode('utf-8') 
         rellenarFichero(name, evento)
         print("Recibimos: ",line.decode('utf-8'))
         linea = line.decode('utf-8').split()
@@ -214,51 +212,49 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
                         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
                         data = my_socket.recv(1024)
                         print("Recibimos: ",data.decode('utf-8') + "\n")
-                        evento = "Recieved from " + IP+":"+Port+": " +line.decode('utf-8') 
+                        evento = "Recieved from " + IP + ":" + Port + ": " + line.decode('utf-8') 
                         rellenarFichero(name, evento)
+                        oracion = data.decode()
                         data = data.decode('utf-8').split()
                         if data[1] == "100" and data[4] == "180" and data[7] == "200":
-                            evento = "Sent to " + IP+": puerto SIP/2.0 100 Trying\r\n\r\n SIP/2.0 180 Ring\r\n\r\n SIP/2.0 200 OK\r\n\r\n"
+                            evento = "Sent to " + IP + ": puerto SIP/2.0 100 Trying\r\n\r\n SIP/2.0 180 Ring\r\n\r\n SIP/2.0 200 OK\r\n\r\n"
                             rellenarFichero(name, evento)
-                            self.wfile.write(b"SIP/2.0 100 Trying\r\n\r\n SIP/2.0 180 Ring\r\n\r\n SIP/2.0 200 OK\r\n\r\n ")
+                            self.wfile.write(bytes(oracion, 'utf-8'))
         elif linea[0] == "REGISTER":
-            if linea[4] != "0":
-                dicc_cliente = {}
-                resumenHash = ""
-                linea = line.decode('utf-8').split(':')
-                try:
-                    resumenCliente = linea[4]
-                    resumenCliente = resumenCliente.split('"')
-                    sip = linea[1]
-                    resumenHash = hash(nonce, sip, resumenCliente[1])
-                except:
-                    pass
-                if resumenHash == "coinciden":
-                    print("Registrando...\n")
-                    line = linea[3].split("\r\n")
-                    servPort = linea[2].split(" ")
-                    servPort = servPort[0]
-                    for i in line:
-                        if i == "Authorization":
-                            autorizacion = 1
-                    if autorizacion == 1:
-                        expires = linea[3].split("\r\n")
-                        expires = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(time.time() + int(expires[0])))
-                        self.Register(ipPuerto, sip, expires, dicc_cliente, servPort)
-                        evento = "Sent to " + IP+":"+ servPort + " SIP/2.0 200 OK\r\n\r\n"
-                        rellenarFichero(name, evento)
-                        self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
-                    else:
-                        evento = "Sent to " + IP+":"+Port + " SIP/2.0 401 Unauthorized\r\nWWW Authenticate: Digest nonce=" + nonce
-                        rellenarFichero(name, evento)
-                        self.wfile.write(b"SIP/2.0 401 Unauthorized\r\nWWW Authenticate: Digest nonce=" + nonce + "\r\n\r\n")
+            dicc_cliente = {}
+            resumenHash = ""
+            linea = line.decode('utf-8').split(':')
+            try:
+                resumenCliente = linea[4]
+                resumenCliente = resumenCliente.split('"')
+                sip = linea[1]
+                resumenHash = hash(nonce, sip, resumenCliente[1])
+            except:
+                pass
+            if resumenHash == "coinciden":
+                print("Registrando...\n")
+                line = linea[3].split("\r\n")
+                servPort = linea[2].split(" ")
+                servPort = servPort[0]
+                for i in line:
+                    if i == "Authorization":
+                        autorizacion = 1
+                if autorizacion == 1:
+                    expires = linea[3].split("\r\n")
+                    expires = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(time.time() + int(expires[0])))
+                    self.Register(ipPuerto, sip, expires, dicc_cliente, servPort)
+                    evento = "Sent to " + IP + ":" + servPort + " SIP/2.0 200 OK\r\n\r\n"
+                    rellenarFichero(name, evento)
+                    self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
                 else:
-                    print("Contraseña errónea...\n")
-                    self.wfile.write(b"SIP/2.0 401 Unauthorized\r\nWWW Authenticate: Digest nonce=89898989898989898989\r\n\r\n")
+                    evento = "Sent to " + IP + ":" + Port + " SIP/2.0 401 Unauthorized\r\nWWW Authenticate: Digest nonce=" + nonce
+                    rellenarFichero(name, evento)
+                    self.wfile.write(b"SIP/2.0 401 Unauthorized\r\nWWW Authenticate: Digest nonce=" + nonce + "\r\n\r\n")
             else:
-                print("Valor de expires incorrecto")
+                print("Contraseña errónea...\n")
+                self.wfile.write(b"SIP/2.0 401 Unauthorized\r\nWWW Authenticate: Digest nonce=89898989898989898989\r\n\r\n")
         else:
-            evento = "Sent to " + IP+":"+Port + " SIP/2.0 405 Method Not Allowed\r\n\r\n"
+            evento = "Sent to " + IP + ":" + Port + " SIP/2.0 405 Method Not Allowed\r\n\r\n"
             rellenarFichero(name, evento)
             self.wfile.write(b"SIP/2.0 405 Method Not Allowed\r\n\r\n")
 
