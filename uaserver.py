@@ -14,6 +14,7 @@ import socketserver
 import time
 import json
 
+
 def crearFichero(nombre):
     fich = open(nombre, 'a+' )
     fich.close()
@@ -75,33 +76,43 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
         Manejador
         """
         line = self.rfile.read()
-        print("Recibimos: ",line.decode('utf-8'))
+        print("Recibimos: ",line.decode('utf-8') + "\n")
         linea = line.decode('utf-8').split()
         evento = "Received from " + ipProxy+":"+puertoProxy+": " + line.decode('utf-8')
         rellenarFichero(username, evento)
         if linea[0] == "INVITE":
             if '@' in linea[1]:
-                self.wfile.write(b"SIP/2.0 100 Trying\r\n\r\n SIP/2.0 180 Ring\r\n\r\n SIP/2.0 200 OK\r\n\r\n")
-                evento = "Sent to " + ipProxy+":"+puertoProxy+": SIP/2.0 100 Trying\r\n\r\n SIP/2.0 180 Ring\r\n\r\n SIP/2.0 200 OK\r\n\r\n" 
+                puertoRtpQueMeInvita = open("puertoRtpQueMeInvita.json", "w")
+                puertoRtpQueMeInvita.write(linea[10])
+                puertoRtpQueMeInvita.close()
+                LINE = "SIP/2.0 100 Trying\r\n\r\n SIP/2.0 180 Ring\r\n\r\n SIP/2.0 200 OK\r\n\r\n"
+                LINE += "SIP/2.0 \r\nContent-Type: application/sdp\r\n"
+                LINE += "v=0\r\no=" + username + "127.0.0.1\r\ns=misesion\r\nt=0\r\nm=audio"
+                LINE += " " + puertoRtp + " RTP\r\n"
+                self.wfile.write(bytes(LINE,'utf-8'))
+                evento = "Sent to " + ipProxy + ":" + puertoProxy + ": SIP/2.0 100 Trying\r\n\r\n SIP/2.0 180 Ring\r\n\r\n SIP/2.0 200 OK\r\n\r\n" 
                 rellenarFichero(username, evento)
             else:
                 self.wfile.write(b"SIP/2.0 400 Bad Request\r\n\r\n")
-                evento = "Sent to " + ipProxy+":"+puertoProxy+": SIP/2.0 400 Bad Request\r\n\r\n" 
+                evento = "Sent to " + ipProxy + ":" + puertoProxy + ": SIP/2.0 400 Bad Request\r\n\r\n" 
                 rellenarFichero(username, evento)
         elif linea[0] == "BYE":
             self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
-            evento = "Sent to " + ipProxy+":"+puertoProxy+": SIP/2.0 200 OK\r\n\r\n" 
+            evento = "Sent to " + ipProxy + ":" + puertoProxy + ": SIP/2.0 200 OK\r\n\r\n" 
             rellenarFichero(username, evento)
         elif linea[0] == "ACK":
-            cancion = './mp32rtp -i 127.0.0.1 -p 23032 < cancion.mp3'
+            fich = open("puertoRtpQueMeInvita.json", "r")
+            for line in fich:
+                puertoRtpQueMeInvita = line
+            cancion = './mp32rtp -i 127.0.0.1 -p ' + puertoRtpQueMeInvita + ' < cancion.mp3'
             print("vamos a ejecutar", cancion)
             os.system(cancion)
             print("hemos enviado la cancion")
-            evento = "Sent to " +puertoRtp+": audio\r\n\r\n" 
+            evento = "Sent to " + puertoRtpQueMeInvita +": audio\r\n\r\n" 
             rellenarFichero(username, evento)
         else:
             self.wfile.write(b"SIP/2.0 405 Method Not Allowed\r\n\r\n")
-            evento = "Sent to " + ipProxy+":"+puertoProxy+": SIP/2.0 405 Method Not Allowed\r\n\r\n" 
+            evento = "Sent to " + ipProxy + ":" + puertoProxy + ": SIP/2.0 405 Method Not Allowed\r\n\r\n" 
             rellenarFichero(username, evento)
 
 if __name__ == "__main__":
