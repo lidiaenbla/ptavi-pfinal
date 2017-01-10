@@ -10,12 +10,12 @@ from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
 import time
 import hashlib
+import os
 
 def hash(contraseña, nonce):
     contraseñaHash = hashlib.sha1()
     LINE = contraseña + nonce
     contraseñaHash.update(bytes(LINE, 'utf-8'))
-    print(contraseñaHash)
     resumen = str(contraseñaHash.digest())
     resumen = resumen.split("'")[1]
     return resumen
@@ -151,12 +151,18 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
     evento += puertoProxy + ": " + data.decode('utf-8')
     rellenarFichero(username, evento)
     data = data.decode('utf-8').split()
-    print(data)
     if data[1] == "100" and data[4] == "180" and data[7] == "200":
+        rtpPuertoInvitado = data[17]
         LINE = "ACK sip:" + dirr + ":" + puerto + " SIP/2.0"
         print("Enviamos: ", LINE + "\n")
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
         evento = "Sent to " + ipProxy + ":" + puertoProxy + ": " + LINE
+        rellenarFichero(username, evento)
+        cancion = './mp32rtp -i 127.0.0.1 -p ' + rtpPuertoInvitado + ' < cancion.mp3'
+        print("vamos a ejecutar", cancion)
+        os.system(cancion)
+        print("hemos enviado la cancion")
+        evento = "Sent to " + rtpPuertoInvitado +": audio\r\n\r\n" 
         rellenarFichero(username, evento)
     elif data[2] == "Unauthorized":
         nonce = data[6].split("=")[1]
@@ -174,4 +180,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
         evento += data.decode('utf-8')
         rellenarFichero(username, evento)
 
+evento = "Finishing."
+rellenarFichero(username, evento)
 print("Socket terminado.")
