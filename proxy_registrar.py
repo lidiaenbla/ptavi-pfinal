@@ -104,6 +104,7 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
             for line in reader:
                 if sip in line:
                     existe = 1
+        reader.close()
         return existe
 
     def comprobarExpires(self,dicc_cliente):
@@ -124,6 +125,7 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
                             hora = hora[1].split(" ")
                             hora = hora[2].split('"')
                             List.append(hora[0])
+        reader.close()
         for i in List:
             if i <= horaActual[1]:
                 deleteList.append(i)
@@ -131,6 +133,7 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
             List = []
             for line in reader:
                 List.append(line)
+        reader.close()
         j=0
         for j in deleteList:
             for elemento in List:
@@ -144,7 +147,7 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
 
     
 
-    def Register(self, ip, sip, expires, dicc_cliente):
+    def Register(self, ip, sip, expires, dicc_cliente, servPort):
         """
         Registrar a clientes en el diccionario
         """
@@ -152,6 +155,9 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         if dicc_cliente != 0:
             self.comprobarExpires(dicc_cliente)
         dicc_cliente[sip] = [ip, expires]
+        fichPuertosServers = open("fichPuertosServers.json", "a+")
+        fichPuertosServers.write(sip + " " + servPort + "\r\n")
+        fichPuertosServers.close()
         existencia = self.comprobarExistencia(sip)
         if existencia == 0:
             self.json2registered()
@@ -174,6 +180,14 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         print("Recibimos: ",line.decode('utf-8'))
         linea = line.decode('utf-8').split()
         if ((linea[0] == "INVITE") or (linea[0] == "BYE") or (linea[0] == "ACK")):
+            invitado = linea[1].split(":")
+            invitado = invitado[1]
+            # buscamos en fichero de puertos de servidores a penny
+            fichPuertosServers = open("fichPuertosServers.json", "r")
+            for fila in fichPuertosServers:
+                if invitado in fila:
+                    puertoInvitado = fila.split(" ")[1]
+            fichPuertosServers.close()
             frase = line.decode('utf-8').split(':')
             # Sacamos puerto servidor
             puertoServidor = frase[2].split(" ")[0]
@@ -181,9 +195,9 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
                 LINE = line.decode('utf-8')
                 self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
                 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
-                    evento = "Sent to " + IP+": " + puertoServidor + line.decode('utf-8')
+                    evento = "Sent to " + IP+": " + puertoInvitado + line.decode('utf-8')
                     rellenarFichero(name, evento)
-                    my_socket.connect(('127.0.0.1', int(puertoServidor)))
+                    my_socket.connect(('127.0.0.1', int(puertoInvitado)))
                     my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
             else:
                 linea = str(linea[1])
@@ -194,9 +208,9 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
                 else:
                     LINE = line.decode('utf-8')
                     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
-                        evento = "Sent to " + IP+": " + puertoServidor + line.decode('utf-8')
+                        evento = "Sent to " + IP+": " + puertoInvitado + line.decode('utf-8')
                         rellenarFichero(name, evento)
-                        my_socket.connect(('127.0.0.1', int(puertoServidor)))
+                        my_socket.connect(('127.0.0.1', int(puertoInvitado)))
                         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
                         data = my_socket.recv(1024)
                         print("Recibimos: ",data.decode('utf-8') + "\n")
@@ -222,14 +236,16 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
                 if resumenHash == "coinciden":
                     print("Registrando...\n")
                     line = linea[3].split("\r\n")
+                    servPort = linea[2].split(" ")
+                    servPort = servPort[0]
                     for i in line:
                         if i == "Authorization":
                             autorizacion = 1
                     if autorizacion == 1:
                         expires = linea[3].split("\r\n")
                         expires = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(time.time() + int(expires[0])))
-                        self.Register(ipPuerto, sip, expires, dicc_cliente)
-                        evento = "Sent to " + IP+":"+Port + " SIP/2.0 200 OK\r\n\r\n"
+                        self.Register(ipPuerto, sip, expires, dicc_cliente, servPort)
+                        evento = "Sent to " + IP+":"+ servPort + " SIP/2.0 200 OK\r\n\r\n"
                         rellenarFichero(name, evento)
                         self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
                     else:
