@@ -127,8 +127,8 @@ rellenarFichero(username, evento)
 if METHOD == "INVITE":
     LINE = "INVITE sip:" + dirr + ":" + puerto
     LINE += " SIP/2.0 \r\nContent-Type: application/sdp\r\n"
-    LINE += "v=0\r\no=\r\ns=misesion\r\nt=0\r\nm=" + pathAudio
-    LINE += " " + puertoRtp + " RTP"
+    LINE += "v=0\r\no=" + username + "127.0.0.1\r\ns=misesion\r\nt=0\r\nm=audio"
+    LINE += " " + puertoRtp + " RTP\r\n"
     evento = "Sent to " + ipProxy + ":" + puerto + ": " + LINE
     rellenarFichero(username, evento)
 elif METHOD == "REGISTER":
