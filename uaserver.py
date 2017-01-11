@@ -78,7 +78,7 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
         line = self.rfile.read()
         print("Recibimos: ",line.decode('utf-8') + "\n")
         linea = line.decode('utf-8').split()
-        evento = "Received from " + ipProxy+":"+puertoProxy+": " + line.decode('utf-8')
+        evento = "Received from " + ipProxy + ":" + puertoProxy + ": " + line.decode('utf-8')
         rellenarFichero(username, evento)
         if linea[0] == "INVITE":
             if '@' in linea[1]:
@@ -87,9 +87,9 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                 puertoRtpQueMeInvita.write(linea[11])
                 puertoRtpQueMeInvita.close()
                 LINE = "SIP/2.0 100 Trying\r\n\r\n SIP/2.0 180 Ring\r\n\r\n SIP/2.0 200 OK\r\n\r\n"
-                LINE += "SIP/2.0 \r\n\r\nContent-Type: application/sdp\r\n"
+                LINE += "SIP/2.0\r\n\r\nContent-Type: application/sdp\r\n"
                 LINE += "v=0\r\no=" + username + "127.0.0.1\r\ns=misesion\r\nt=0\r\nm=audio"
-                LINE += " " + puertoRtp + " RTP\r\n"
+                LINE += " " + puertoRtp + " RTP\r\n\r\n"
                 self.wfile.write(bytes(LINE,'utf-8'))
                 evento = "Sent to " + ipProxy + ":" + puertoProxy + ": SIP/2.0 100 Trying\r\n\r\n SIP/2.0 180 Ring\r\n\r\n SIP/2.0 200 OK\r\n\r\n" 
                 rellenarFichero(username, evento)
