@@ -1,0 +1,3 @@
+Creo dos ficheros adiccionales:
+	1. fichPuertosServers: guarda la sip y el puerto del servidor correspondiente a ese cliente
+	2. puertoRtpQueMeInvita: guarda el puerto Rtp que llega en el mensaje INVITE en sdp
