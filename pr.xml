@@ -1,0 +1,5 @@
+<config>
+	<server name="proxy" ip="127.0.0.1" puerto="5062"/>
+	<database path="" passwdpath=""/>
+	<log path=""/>
+</config>
