@@ -1,0 +1,7 @@
+Restablecer usuarios conectados
+He implementado esto escribiendo "a+"" en vez de "w" a la hora de abrir el fichero. De esta forma cuando se cierre el proxy_registrar.py
+los usuarios siguen registrados. Además de si se intenta registrar otro usuario no suplanta lo escrito anteriormente en el fichero.
+	fichLog = open(nameFich, 'a+')
+
+Consistencia del servidor proxy/registrar frente a valores erroneos
+	Detecta en el cliente a la hora de sacar los datos del .xml de cada cliente si alguno de los puertos no es un entero, si no es entero sale del programa
