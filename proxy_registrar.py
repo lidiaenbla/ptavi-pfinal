@@ -11,8 +11,9 @@ import hashlib
 
 
 def crearFichero(nombre):
-    fich = open(nombre, 'a+' )
+    fich = open(nombre, 'a+')
     fich.close()
+
 
 def rellenarFichero(nombre, evento):
     nameFich = nombre + ".log"
@@ -24,6 +25,7 @@ def rellenarFichero(nombre, evento):
     for i in event:
         EVNT = EVNT + str(i)
     fichLog.write(str(horaActual) + " " + EVNT + "\r\n")
+
 
 def hash(nonce, username, resumenCliente):
     nonce = nonce.split('"')
@@ -37,7 +39,7 @@ def hash(nonce, username, resumenCliente):
     LINE2 = contraseñaFicheroHash[0] + nonce[1]
     contraseñaHash2.update(bytes(LINE2, 'utf-8'))
     contraseñaHash2 = str(contraseñaHash2.digest()).split("'")
-    print("Resumen fichero passwords: ",contraseñaHash2[1])
+    print("Resumen fichero passwords: ", contraseñaHash2[1])
     print("Resumen cliente: ", resumenCliente)
     if resumenCliente == contraseñaHash2[1]:
         return "coinciden"
@@ -56,8 +58,8 @@ class leerFicheroXml(ContentHandler):
 
         if etiqueta == 'server':
             server = {'server': ({'name': attrs.get('name', ""),
-                                    'ip': attrs.get('ip', ""),
-                                    'puerto': attrs.get('puerto', "")})}
+                                  'ip': attrs.get('ip', ""),
+                                  'puerto': attrs.get('puerto', "")})}
             self.misdatos.append(server)
         elif etiqueta == 'database':
             database = {'database': ({'path': attrs.get('path', ""),
@@ -69,7 +71,7 @@ class leerFicheroXml(ContentHandler):
 
     def get_tags(self):
         return self.misdatos
-        
+
 
 class diccionarioRegistrar(socketserver.DatagramRequestHandler):
     """
@@ -97,16 +99,16 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
             fich.close()
             pass
 
-    def comprobarExistencia(self,sip):
+    def comprobarExistencia(self, sip):
         existe = 0
-        with open('registered.json','r') as reader:
+        with open('registered.json', 'r') as reader:
             for line in reader:
                 if sip in line:
                     existe = 1
         reader.close()
         return existe
 
-    def comprobarExpires(self,dicc_cliente):
+    def comprobarExpires(self, dicc_cliente):
         """
         Comprobar si ha expirado un cliente
         """
@@ -115,7 +117,7 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         horaActual = time.gmtime(time.time())
         horaActual = time.strftime('%Y-%m-%d %H:%M:%S', horaActual)
         horaActual = horaActual.split(" ")
-        with open('registered.json','r') as reader:
+        with open('registered.json', 'r') as reader:
             for line in reader:
                 if (line != "\n"):
                     if (line != "{}\n"):
@@ -127,23 +129,21 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         for i in List:
             if i <= horaActual[1]:
                 deleteList.append(i)
-        with open('registered.json','r') as reader:
+        with open('registered.json', 'r') as reader:
             List = []
             for line in reader:
                 List.append(line)
         reader.close()
-        j=0
+        j = 0
         for j in deleteList:
             for elemento in List:
                 if j in elemento:
                     print("Eliminamos -->", elemento)
                     List.remove(elemento)
         if List != 0:
-            fJson = open('registered.json','w')
+            fJson = open('registered.json', 'w')
             json.dump(List, fJson)
             fJson.close()
-
-    
 
     def Register(self, ip, sip, expires, dicc_cliente, servPort):
         """
@@ -161,7 +161,7 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
             self.json2registered()
             self.register2json(dicc_cliente)
         else:
-            print("cliente ya registrado: " + sip  + "\n")
+            print("cliente ya registrado: " + sip + "\n")
 
     def handle(self):
         """
@@ -173,9 +173,10 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
         IP = str(self.client_address[0])
         Port = str(self.client_address[1])
         ipPuerto = IP + ":" + Port
-        evento = "Recieved from " + IP + ":" + Port + ": " + line.decode('utf-8') 
+        evento = "Recieved from " + IP + ":"
+        evento += Port + ": " + line.decode('utf-8')
         rellenarFichero(name, evento)
-        print("Recibimos: ",line.decode('utf-8'))
+        print("Recibimos: ", line.decode('utf-8'))
         linea = line.decode('utf-8').split()
         if ((linea[0] == "INVITE") or (linea[0] == "BYE") or (linea[0] == "ACK")):
             invitado = linea[1].split(":")
@@ -193,7 +194,8 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
                 LINE = line.decode('utf-8')
                 self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
                 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
-                    evento = "Sent to " + IP+": " + puertoInvitado + line.decode('utf-8')
+                    evento = "Sent to " + IP + ": "
+                    evento += puertoInvitado + line.decode('utf-8')
                     rellenarFichero(name, evento)
                     my_socket.connect(('127.0.0.1', int(puertoInvitado)))
                     my_socket.send(bytes(LINE, 'utf-8'))
@@ -206,18 +208,22 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
                 else:
                     LINE = line.decode('utf-8')
                     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
-                        evento = "Sent to " + IP+": " + puertoInvitado + line.decode('utf-8')
+                        evento = "Sent to " + IP + ": "
+                        evento += puertoInvitado + line.decode('utf-8')
                         rellenarFichero(name, evento)
                         my_socket.connect(('127.0.0.1', int(puertoInvitado)))
                         my_socket.send(bytes(LINE, 'utf-8'))
                         data = my_socket.recv(1024)
-                        print("Recibimos: ",data.decode('utf-8') + "\n")
-                        evento = "Recieved from " + IP + ":" + Port + ": " + line.decode('utf-8') 
+                        print("Recibimos: ", data.decode('utf-8') + "\n")
+                        evento = "Recieved from " + IP + ":"
+                        evento += puertoInvitado + ": " + data.decode('utf-8')
                         rellenarFichero(name, evento)
                         oracion = data.decode()
                         data = data.decode('utf-8').split()
                         if data[1] == "100" and data[4] == "180" and data[7] == "200":
-                            evento = "Sent to " + IP + ": puerto SIP/2.0 100 Trying\r\n\r\n SIP/2.0 180 Ring\r\n\r\n SIP/2.0 200 OK\r\n\r\n"
+                            evento = "Sent to " + IP + ":" + puertoInvitado
+                            evento += " SIP/2.0 100 Trying "
+                            evento += "SIP/2.0 180 Ring SIP/2.0 200 OK"
                             rellenarFichero(name, evento)
                             self.wfile.write(bytes(oracion, 'utf-8'))
         elif linea[0] == "REGISTER":
@@ -230,6 +236,10 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
                 sip = linea[1]
                 resumenHash = hash(nonce, sip, resumenCliente[1])
             except:
+                evento = "Sent to " + IP + ":" + Port
+                evento += " SIP/2.0 401 Unauthorized "
+                evento += "WWW Authenticate: Digest nonce=" + nonce
+                rellenarFichero(name, evento)
                 pass
             if resumenHash == "coinciden":
                 print("Registrando...\n")
@@ -243,18 +253,21 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
                     expires = linea[3].split("\r\n")
                     expires = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(time.time() + int(expires[0])))
                     self.Register(ipPuerto, sip, expires, dicc_cliente, servPort)
-                    evento = "Sent to " + IP + ":" + servPort + " SIP/2.0 200 OK\r\n\r\n"
+                    evento = "Sent to " + IP + ":" + Port + " SIP/2.0 200 OK"
                     rellenarFichero(name, evento)
                     self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
                 else:
-                    evento = "Sent to " + IP + ":" + Port + " SIP/2.0 401 Unauthorized\r\n\r\nWWW Authenticate: Digest nonce=" + nonce
+                    evento = "Sent to " + IP + ":" + Port
+                    evento += " SIP/2.0 401 Unauthorized "
+                    evento += "WWW Authenticate: Digest nonce=" + nonce
                     rellenarFichero(name, evento)
                     self.wfile.write(b"SIP/2.0 401 Unauthorized\r\n\r\nWWW Authenticate: Digest nonce=" + nonce + "\r\n\r\n")
             else:
                 print("Contraseña errónea...\n")
                 self.wfile.write(b"SIP/2.0 401 Unauthorized\r\n\r\nWWW Authenticate: Digest nonce=89898989898989898989\r\n\r\n")
         else:
-            evento = "Sent to " + IP + ":" + Port + " SIP/2.0 405 Method Not Allowed\r\n\r\n"
+            evento = "Sent to " + IP + ":" + Port
+            evento += " SIP/2.0 405 Method Not Allowed"
             rellenarFichero(name, evento)
             self.wfile.write(b"SIP/2.0 405 Method Not Allowed\r\n\r\n")
 
@@ -281,12 +294,12 @@ for elementos in misdatos:
                 elif atributo == 'puerto':
                     puerto = valor
             elif etiqueta == 'database':
-                if atributo =='path':
+                if atributo == 'path':
                     path = valor
                 elif atributo == 'passwdpath':
                     passwdpath = valor
             elif etiqueta == 'log':
-                if atributo =='path':
+                if atributo == 'path':
                     pathLog = valor
 
 if __name__ == "__main__":
@@ -301,4 +314,3 @@ if __name__ == "__main__":
         evento = "Finishing."
         rellenarFichero(name, evento)
         print("Finalizado proxy")
-           
