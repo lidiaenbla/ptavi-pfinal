@@ -12,6 +12,7 @@ import time
 import hashlib
 import os
 
+
 def hash(contraseña, nonce):
     contraseñaHash = hashlib.sha1()
     LINE = contraseña + nonce
@@ -20,7 +21,7 @@ def hash(contraseña, nonce):
     resumen = resumen.split("'")[1]
     return resumen
 
-#6 puntitos en INVITE al final y ACK al final!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 def crearFichero(nombre):
     fich = open(nombre, 'a+')
     fich.close()
@@ -127,18 +128,19 @@ rellenarFichero(username, evento)
 if METHOD == "INVITE":
     LINE = "INVITE sip:" + dirr + ":" + puerto
     LINE += " SIP/2.0\r\n\r\nContent-Type: application/sdp\r\n\n"
-    LINE += "v=0\r\no=" + username + " 127.0.0.1\r\ns=misesion\r\nt=0\r\nm=audio"
+    LINE += "v=0\r\no=" + username
+    LINE += " 127.0.0.1\r\ns=misesion\r\nt=0\r\nm=audio"
     LINE += " " + puertoRtp + " RTP\r\n"
-    evento = "Sent to " + ipProxy + ":" + puerto + ": " + LINE
+    evento = "Sent to " + ipProxy + ":" + puertoProxy + ": " + LINE
     rellenarFichero(username, evento)
 elif METHOD == "REGISTER":
     LINE = "REGISTER sip:" + username + ":" + puerto
     LINE += " SIP/2.0\r\n\r\nExpires: " + OPCION + "\r\n\r\n"
-    evento = "Sent to " + ipProxy + ":" + puerto + ": " + LINE
+    evento = "Sent to " + ipProxy + ":" + puertoProxy + ": " + LINE
     rellenarFichero(username, evento)
 elif METHOD == "BYE":
     LINE = "BYE sip:" + dirr + ":" + puerto + " SIP/2.0\r\n"
-    evento = "Sent to " + ipProxy + ":" + puerto + ": " + LINE
+    evento = "Sent to " + ipProxy + ":" + puertoProxy + ": " + LINE
     rellenarFichero(username, evento)
 
 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
@@ -158,11 +160,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
         my_socket.send(bytes(LINE, 'utf-8'))
         evento = "Sent to " + ipProxy + ":" + puertoProxy + ": " + LINE
         rellenarFichero(username, evento)
-        cancion = './mp32rtp -i 127.0.0.1 -p ' + rtpPuertoInvitado + ' < cancion.mp3'
+        cancion = './mp32rtp -i 127.0.0.1 -p ' + rtpPuertoInvitado
+        cancion += ' < cancion.mp3'
         print("vamos a ejecutar", cancion)
         os.system(cancion)
         print("hemos enviado la cancion")
-        evento = "Sent to " + rtpPuertoInvitado +": audio\r\n\r\n" 
+        evento = "Sent to " + rtpPuertoInvitado + ": audio"
         rellenarFichero(username, evento)
     elif data[2] == "Unauthorized":
         nonce = data[6].split("=")[1]
@@ -176,7 +179,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
         rellenarFichero(username, evento)
         data = my_socket.recv(1024)
         print("Recibimos: ", data.decode('utf-8') + "\n")
-        evento = "Received from " + ipProxy + ":" + puerto + ": "
+        evento = "Received from " + ipProxy + ":" + puertoProxy + ": "
         evento += data.decode('utf-8')
         rellenarFichero(username, evento)
 
