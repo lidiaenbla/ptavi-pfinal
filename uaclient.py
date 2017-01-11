@@ -128,7 +128,7 @@ if METHOD == "INVITE":
     LINE = "INVITE sip:" + dirr + ":" + puerto
     LINE += " SIP/2.0\r\n\r\nContent-Type: application/sdp\r\n\n"
     LINE += "v=0\r\no=" + username + " 127.0.0.1\r\ns=misesion\r\nt=0\r\nm=audio"
-    LINE += " " + puertoRtp + " RTP\r\n\r\n"
+    LINE += " " + puertoRtp + " RTP\r\n"
     evento = "Sent to " + ipProxy + ":" + puerto + ": " + LINE
     rellenarFichero(username, evento)
 elif METHOD == "REGISTER":
@@ -137,7 +137,7 @@ elif METHOD == "REGISTER":
     evento = "Sent to " + ipProxy + ":" + puerto + ": " + LINE
     rellenarFichero(username, evento)
 elif METHOD == "BYE":
-    LINE = "BYE sip:" + dirr + ":" + puerto + " SIP/2.0\r\n\r\n"
+    LINE = "BYE sip:" + dirr + ":" + puerto + " SIP/2.0\r\n"
     evento = "Sent to " + ipProxy + ":" + puerto + ": " + LINE
     rellenarFichero(username, evento)
 
