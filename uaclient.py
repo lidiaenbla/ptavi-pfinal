@@ -13,6 +13,13 @@ import hashlib
 import os
 
 
+def comprobarEntero(puerto):
+    if (float(puerto) % 1 == 0):
+        print("Puerto correcto")
+    else:
+        sys.exit("Puerto incorrecto")
+
+
 def hash(contraseña, nonce):
     contraseñaHash = hashlib.sha1()
     LINE = contraseña + nonce
@@ -106,14 +113,17 @@ for elementos in misdatos:
                     ip = valor
                 elif atributo == 'puerto':
                     puerto = valor
+                    comprobarEntero(puerto)
             elif etiqueta == 'rtpaudio':
                 if atributo == 'puerto':
                     puertoRtp = valor
+                    comprobarEntero(puertoRtp)
             elif etiqueta == 'regproxy':
                 if atributo == 'ip':
                     ipProxy = valor
                 elif atributo == 'puerto':
                     puertoProxy = valor
+                    comprobarEntero(puertoProxy)
             elif etiqueta == 'log':
                 if atributo == 'path':
                     pathLog = valor
