@@ -247,12 +247,12 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
                     rellenarFichero(name, evento)
                     self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
                 else:
-                    evento = "Sent to " + IP + ":" + Port + " SIP/2.0 401 Unauthorized\r\nWWW Authenticate: Digest nonce=" + nonce
+                    evento = "Sent to " + IP + ":" + Port + " SIP/2.0 401 Unauthorized\r\n\r\nWWW Authenticate: Digest nonce=" + nonce
                     rellenarFichero(name, evento)
-                    self.wfile.write(b"SIP/2.0 401 Unauthorized\r\nWWW Authenticate: Digest nonce=" + nonce + "\r\n\r\n")
+                    self.wfile.write(b"SIP/2.0 401 Unauthorized\r\n\r\nWWW Authenticate: Digest nonce=" + nonce + "\r\n\r\n")
             else:
                 print("Contraseña errónea...\n")
-                self.wfile.write(b"SIP/2.0 401 Unauthorized\r\nWWW Authenticate: Digest nonce=89898989898989898989\r\n\r\n")
+                self.wfile.write(b"SIP/2.0 401 Unauthorized\r\n\r\nWWW Authenticate: Digest nonce=89898989898989898989\r\n\r\n")
         else:
             evento = "Sent to " + IP + ":" + Port + " SIP/2.0 405 Method Not Allowed\r\n\r\n"
             rellenarFichero(name, evento)
