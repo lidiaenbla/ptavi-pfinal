@@ -196,7 +196,7 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
                     evento = "Sent to " + IP+": " + puertoInvitado + line.decode('utf-8')
                     rellenarFichero(name, evento)
                     my_socket.connect(('127.0.0.1', int(puertoInvitado)))
-                    my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
+                    my_socket.send(bytes(LINE, 'utf-8'))
             else:
                 linea = str(linea[1])
                 sip = linea.split(":")[-2]
@@ -209,7 +209,7 @@ class diccionarioRegistrar(socketserver.DatagramRequestHandler):
                         evento = "Sent to " + IP+": " + puertoInvitado + line.decode('utf-8')
                         rellenarFichero(name, evento)
                         my_socket.connect(('127.0.0.1', int(puertoInvitado)))
-                        my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
+                        my_socket.send(bytes(LINE, 'utf-8'))
                         data = my_socket.recv(1024)
                         print("Recibimos: ",data.decode('utf-8') + "\n")
                         evento = "Recieved from " + IP + ":" + Port + ": " + line.decode('utf-8') 
